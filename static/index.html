@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>交邮 · 本机邮件工作台</title>
+  <link rel="stylesheet" href="/style.css">
+  <script defer src="/app.js"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="交邮首页"><span class="brand-icon">邮</span><span>交邮<small>本机邮件工作台</small></span></a>
+    <div class="workspace-label">我的工作区</div>
+    <button class="nav active" id="nav-drafts"><span>▤</span> 邮件草稿 <b id="nav-count">0</b></button>
+    <button class="nav" id="nav-history"><span>◷</span> 发送记录</button>
+    <div class="side-note"><span class="local-dot"></span> 仅在这台 Mac 运行<p>草稿和记录保存在本机。<br>密码仅用于当前发送任务。</p></div>
+    <div class="side-bottom">SJTU MAIL DESK <span>v1.0</span></div>
+  </aside>
+  <main>
+    <header class="topbar"><span id="breadcrumb">工作区 / 邮件草稿</span><div><span class="connection" id="connection">正在连接本机服务</span><span class="mode-pill" id="mode-pill">本机模式</span></div></header>
+    <div class="page">
+      <div id="demo-banner" class="notice demo" hidden><b>演示模式</b><span>使用示例草稿与模拟发送，所有操作均不会连接邮件服务器。演示记录与正式记录独立保存。</span></div>
+      <div id="error-banner" class="notice error" role="alert" hidden></div>
+      <section class="page-heading"><div><div class="eyebrow">每封邮件，都有清晰的去向</div><h1 id="page-title">邮件草稿</h1><p id="page-subtitle">导入、核对、确认发送。在一个工作台里完成。</p></div><button class="button secondary" id="export-top">导出发送记录 <span>↓</span></button></section>
+      <section class="stats" aria-label="草稿概览">
+        <div><span>已导入草稿</span><strong id="stat-total">0</strong><small>封邮件</small></div>
+        <div><span>可继续发送</span><strong id="stat-ready">0</strong><small>封邮件</small></div>
+        <div><span id="sent-stat-label">服务器已接受</span><strong id="stat-sent">0</strong><small>全部地址已接受</small></div>
+        <div><span>需要处理</span><strong id="stat-attention">0</strong><small>检查问题或核对结果</small></div>
+      </section>
+      <section id="job-panel" class="panel job-panel" hidden aria-live="polite">
+        <div class="job-head"><div><span class="eyebrow" id="job-mode">发送任务</span><h2 id="job-title">正在提交邮件</h2></div><button class="button danger" id="stop-job">停止后续发送</button></div>
+        <progress id="job-progress" max="1" value="0"></progress>
+        <p id="job-description"></p><div id="job-events" class="job-events"></div>
+      </section>
+      <div id="draft-view" class="work-grid">
+        <div class="mail-column">
+          <section class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="导入 EML 邮件草稿">
+            <div class="upload-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 23v4h22v-4M16 22V5m-6 6 6-6 6 6"/></svg></div>
+            <div><h2>把邮件草稿拖到这里</h2><p>支持批量选择 .eml，保留原有正文与附件</p><small>单文件最高 32 MB · 相同内容自动去重</small></div>
+            <button class="button primary" id="choose-files">选择文件</button>
+            <input id="file-input" type="file" accept=".eml" multiple hidden>
+          </section>
+          <p class="import-message" id="import-message" role="status"></p>
+          <section class="panel mail-panel">
+            <div class="panel-heading"><h2>草稿列表 <span id="list-count">0</span></h2><div class="list-tools"><label class="search"><span>⌕</span><input type="search" id="search" placeholder="搜索主题、收件人或文件名" aria-label="搜索草稿"></label><select id="filter" aria-label="筛选状态"><option value="all">全部状态</option><option value="eligible">可继续发送</option><option value="sent">已接受</option><option value="attention">需要处理</option></select></div></div>
+            <div class="table-scroll"><table class="mail-table"><thead><tr><th class="check-cell"><input type="checkbox" id="select-all" aria-label="选择当前列表全部草稿"></th><th>邮件 / 收件人</th><th>附件</th><th>状态</th><th class="right">操作</th></tr></thead><tbody id="mail-rows"></tbody></table></div>
+            <div class="empty" id="empty-state"><div class="empty-envelope">✉</div><h3>你的第一批邮件，从这里开始</h3><p>导入已有 .eml 草稿，先检查收件人与附件。<br>预览不会连接邮件服务器。</p></div>
+            <div class="selection-bar"><span id="selection-count">已选择 0 封</span><button class="text-button" id="remove-selected" disabled>移除所选</button><span class="selection-tip">移除草稿会保留历史发送记录</span></div>
+          </section>
+          <p class="footnote">“已接受”表示服务器接受提交，不代表最终送达。结果未知的地址会锁定，防止重复发送。</p>
+        </div>
+        <aside class="settings panel">
+          <div class="settings-title"><span class="settings-symbol">✉</span><div><h2>发送设置</h2><p>上海交通大学邮箱</p></div></div>
+          <label class="field">jAccount 用户名<input id="account" autocomplete="username" placeholder="例如 zhangsan" maxlength="64"><small id="sender-preview">发件地址：用户名@sjtu.edu.cn</small></label>
+          <div class="server-info"><div><span>服务器</span><b>mail.sjtu.edu.cn</b></div><div><span>连接</span><b>465 · SSL/TLS</b></div></div>
+          <label class="field">测试收件邮箱<input id="test-to" type="email" placeholder="填写你自己的邮箱" autocomplete="off"><small>先选一封草稿，检查正文和附件。</small></label>
+          <button class="button secondary full" id="test-send" disabled>给自己测试一封</button>
+          <div class="divider"></div>
+          <label class="field">每封间隔（秒）<input id="delay" type="number" min="0" max="60" step="0.5" value="2"></label>
+          <button class="button primary full" id="send-selected" disabled>预览并发送所选</button>
+          <p class="settings-note">下一步会展示实际投递清单，<br>输入确认文字和密码后才开始发送。</p>
+        </aside>
+      </div>
+      <section id="history-view" class="panel" hidden>
+        <div class="panel-heading"><h2>最近发送记录</h2><span class="muted">显示最近 200 次提交，导出包含全部记录</span></div>
+        <div class="table-scroll"><table class="history-table"><thead><tr><th>邮件 / 时间</th><th>模式 / 实际投递地址</th><th>结果</th><th>说明</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+        <div id="history-empty" class="empty"><h3>还没有发送记录</h3><p>完成测试或正式提交后，记录会显示在这里。</p></div>
+      </section>
+      <footer>交邮 · 文件保存在本机，发送前由你确认。<span>关闭启动终端将停止本机服务</span></footer>
+    </div>
+  </main>
+  <dialog id="detail-dialog" class="detail-dialog"><div class="dialog-heading"><div><span class="eyebrow">邮件详情</span><h2 id="detail-subject"></h2><p id="detail-filename"></p></div><button class="icon-button close-dialog" aria-label="关闭详情">×</button></div><div class="dialog-body"><div id="detail-problem" class="notice error" hidden></div><div id="detail-recipients" class="recipient-grid"></div><h3>附件 <span id="attachment-count"></span></h3><div id="detail-attachments" class="attachments"></div><div class="body-tabs"><button id="plain-tab" class="tab active">纯文本</button><button id="html-tab" class="tab">HTML 预览</button><small>预览禁用脚本、外部图片和链接</small></div><pre id="plain-body"></pre><iframe id="html-body" title="隔离的邮件正文预览" sandbox="" referrerpolicy="no-referrer" hidden></iframe><div id="detail-deliveries"></div><div id="unlock-box" class="unlock-box" hidden><h3>人工核对后再重试</h3><p id="unlock-scope"></p><p>SMTP 提交不一定出现在网页邮箱“已发送”中。请结合服务器记录或收件方确认后操作。解除锁定可能造成重复投递。</p><label class="field">完整输入“已核对，允许重试”<input id="unlock-confirm" autocomplete="off"></label><button id="unlock-button" class="button danger">解除待核对地址的锁定</button></div></div></dialog>
+  <dialog id="confirm-dialog" class="confirm-dialog"><form id="confirm-form"><div class="dialog-heading"><div><span class="eyebrow">最后一步 · 确认实际投递清单</span><h2 id="confirm-title">确认发送</h2></div><button type="button" class="icon-button close-dialog" aria-label="取消发送">×</button></div><div class="dialog-body"><div id="confirm-demo" class="notice demo" hidden>演示模式：仅模拟结果，不会发送邮件，也不需要真实密码。</div><div class="confirm-summary" id="confirm-summary"></div><div class="confirm-items" id="confirm-items"></div><div id="confirm-skipped" class="notice" hidden></div><p class="muted">提交后无法撤回。测试模式仅投递到测试邮箱；正式模式保留原 To/Cc 显示，密送地址不写入邮件头。</p><label class="field" id="password-field">jAccount 密码<input id="password" type="password" autocomplete="off"><small>只用于本次任务，不写入文件或发送记录。</small></label><label class="field"><span id="confirm-label"></span><input id="confirmation" autocomplete="off" required></label><div id="confirm-error" class="notice error" role="alert" hidden></div></div><div class="dialog-actions"><button type="button" class="button secondary close-dialog">返回检查</button><button class="button primary" id="confirm-submit" type="submit">确认并开始</button></div></form></dialog>
+  <dialog id="remove-dialog" class="small-dialog"><div class="dialog-heading"><h2>移除所选草稿？</h2></div><div class="dialog-body"><p id="remove-description"></p><p class="muted">本机导入副本将被移除，原始文件不受影响。历史发送记录会保留。</p></div><div class="dialog-actions"><button class="button secondary close-dialog">取消</button><button class="button danger" id="remove-confirm">确认移除</button></div></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

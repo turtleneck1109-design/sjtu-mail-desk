@@ -1,0 +1,39 @@
+# Private mail and runtime state: never commit these directories.
+/data/
+/demo_data/
+/work/
+/outputs/
+**/drafts/
+*.eml
+*.msg
+*.mbox
+*.csv
+*.xls
+*.xlsx
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.db
+*.db-*
+send_results*
+.instance.lock
+.seeded
+
+# Credentials and local configuration.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Generated files and local tooling.
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+node_modules/
+*.log
+*.tmp
+*.zip
+.DS_Store
+.AppleDouble
