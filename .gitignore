@@ -37,3 +37,10 @@ node_modules/
 *.zip
 .DS_Store
 .AppleDouble
+
+# Standalone macOS build outputs.
+*.app/
+*.dmg
+/build/
+/dist/
+*.spec

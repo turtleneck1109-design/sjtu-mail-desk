@@ -17,6 +17,7 @@ import signal
 import smtplib
 import sqlite3
 import ssl
+import sys
 import threading
 import time
 import webbrowser
@@ -31,11 +32,26 @@ from pathlib import Path
 from urllib.parse import urlsplit, parse_qs, quote
 
 BASE = Path(__file__).resolve().parent
+APP_VERSION = '1.1.0'
 MAX_FILE = 32 * 1024 * 1024
 SMTP_HOST, SMTP_PORT = 'mail.sjtu.edu.cn', 465
 EMAIL_RE = re.compile(r"[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?\.[A-Za-z]{2,63}\Z")
 ACCOUNT_RE = re.compile(r'[A-Za-z0-9._-]{1,64}\Z')
 BLOCKED = {'sent', 'attempting', 'uncertain'}
+
+
+def default_data_root(demo=False):
+    """Never write runtime data into a signed or read-only application bundle."""
+    if getattr(sys, 'frozen', False):
+        return Path.home() / 'Library' / 'Application Support' / 'SJTUMailDesk' / ('demo_data' if demo else 'data')
+    return BASE / ('demo_data' if demo else 'data')
+
+
+def create_tls_context():
+    # Frozen Python cannot rely on certificate paths from the build machine.
+    if getattr(sys, 'frozen', False):
+        return ssl.create_default_context(cafile=str(BASE / 'certs' / 'cacert.pem'))
+    return ssl.create_default_context()
 
 
 def now():
@@ -289,7 +305,7 @@ class MailDesk:
                 items.append(item)
             history = [dict(r) for r in db.execute('SELECT * FROM attempts ORDER BY started_at DESC,rowid DESC LIMIT 200')]
             return {'demo': self.demo, 'items': items, 'job': copy.deepcopy(self.job), 'history': history,
-                    'smtp': {'host': SMTP_HOST, 'port': SMTP_PORT}, 'max_file': MAX_FILE}
+                    'smtp': {'host': SMTP_HOST, 'port': SMTP_PORT}, 'max_file': MAX_FILE, 'desktop': bool(getattr(sys, 'frozen', False)), 'version': APP_VERSION}
 
     def detail(self, digest):
         with self.lock, self.db() as db:
@@ -412,7 +428,7 @@ class MailDesk:
     def _submit(self, plan, item, data):
         smtp, phase = None, 'connect'
         try:
-            smtp = self.smtp_factory(SMTP_HOST, SMTP_PORT, timeout=30, context=ssl.create_default_context())
+            smtp = self.smtp_factory(SMTP_HOST, SMTP_PORT, timeout=30, context=create_tls_context())
             phase = 'login'
             smtp.login(plan['account'], plan['_password'])
             phase = 'send'
@@ -537,7 +553,7 @@ class Server(ThreadingHTTPServer):
 
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = 'MailDesk/1.0'
+    server_version = 'MailDesk/' + APP_VERSION
 
     def log_message(self, *args):
         pass  # Never log authorization headers, passwords, or imported mail.
@@ -653,13 +669,18 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description='交邮 · 本机批量邮件工作台')
+    parser.add_argument('--self-test', action='store_true', help='离线自检，不连接 SMTP、不打开浏览器')
     parser.add_argument('--demo', action='store_true', help='演示模式，绝不连接 SMTP')
     parser.add_argument('--no-browser', action='store_true')
     parser.add_argument('--port', type=int, default=0)
     parser.add_argument('--data-dir', type=Path)
     args = parser.parse_args()
     os.umask(0o077)
-    root = args.data_dir or BASE / ('demo_data' if args.demo else 'data')
+    if args.self_test:
+        from macos.selftest import run
+        run()
+        return
+    root = args.data_dir or default_data_root(args.demo)
     root.mkdir(parents=True, exist_ok=True, mode=0o700)
     lockfile = open(root / '.instance.lock', 'a+')
     try:

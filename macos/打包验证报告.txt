@@ -1,0 +1,38 @@
+交邮 v1.1 Mac 应用打包验证
+日期：2026-11-22
+
+交付物
+交邮.app、SJTU-Mail-v1.1-universal2.dmg、SJTU-Mail-v1.1-universal2.zip 和 SHA-256 文件。
+原生中文启动窗口，邮件工作台使用系统默认浏览器，不需要终端或外部 Python。
+内置 Python 3.14.0，PyInstaller 6.22.3，certifi 2026.11.20 的 113 个根证书。
+
+自动化结果
+- 40 项 Python 测试通过，覆盖原邮件与接口逻辑、Mac 启动入口及新打包适配。
+- 10 项离线界面逻辑测试通过。
+- Python 测试分别在源码环境 Python 3.14.4 和打包环境 Python 3.14.0 执行通过。
+- 清空可用命令路径后，实际 .app 内置启动器及内置引擎仍完成自检，证明不依赖 PATH 中的 Python。
+- arm64 原生自检、x86_64 经 Rosetta 自检均通过：TLS 校验与根证书、静态资源、导入去重、Excel 附件完整性、测试收件人替换、本机 HTTP 服务、模拟提交、SQLite 重启持久化、CSV 以及原始文件保留。
+- ZIP 解压后通过双架构自检与签名完整性验证。
+- DMG 只读挂载后可以启动内置程序完成自检，应用不会向自身安装包写入用户数据。
+- 对实际打包引擎发送终止信号时，停止后续模拟邮件，保存已完成的一封，未启动下一封。
+- 全部 49 个 Mach-O 二进制同时包含 arm64 / x86_64，不引用外部 Python、Homebrew 或构建用户目录下的动态库。
+- 所有二进制最低系统版本要求不高于 macOS 13.0。
+- codesign --verify --deep --strict 通过，签名类型为 ad-hoc。
+- 原生应用窗口已实际打开并检查排版，退出按钮已验证可结束应用。
+
+测试环境与限制
+实际设备为 Apple 芯片 Mac，macOS 15.7.3；Intel 运行测试使用 Rosetta，不是独立 Intel 实机测试。
+macOS 13 是编译和依赖最低版本目标，未在 macOS 13 实机完成测试。
+实际浏览器中的邮件页面没有在本轮重新做视觉及点击验收；使用离线界面逻辑和本机接口测试覆盖。
+所有邮件提交测试只使用临时演示数据，没有连接真实 SMTP，也没有发送真实邮件。
+
+签名、公证状态
+没有可用的 Developer ID 证书；用户选择先完成未公证安装包。
+此应用未做 Developer ID 签名和 Apple 公证。Gatekeeper 的 spctl 评估返回 rejected，符合该分发状态。
+因此本版不能承诺其他人的 Mac 下载后首次双击便无提示启动；没有关闭或绕过任何系统安全保护。
+官方说明：https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution
+
+数据隔离
+数据保存到用户 Library/Application Support/SJTUMailDesk，应用升级不覆盖数据。
+打包范围未纳入已有用户 data、demo_data、邮件、数据库、附件或密码。
+源码版原有数据路径不变；旧用户升级前需要完整迁移 data 文件夹。

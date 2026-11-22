@@ -110,6 +110,7 @@ async function refresh() {
     state = await json('state');
     $('error-banner').hidden = true;
     $('connection').textContent = '本机服务已连接';
+    $('runtime-hint').textContent = state.desktop ? '浏览器关闭后仍在运行，请从交邮窗口退出应用' : '关闭启动终端将停止本机服务';
     $('demo-banner').hidden = !state.demo;
     $('mode-pill').textContent = state.demo?'演示模式':'本机模式';
     $('sent-stat-label').textContent = state.demo?'模拟已接受':'服务器已接受';
@@ -127,7 +128,7 @@ async function refresh() {
     renderList(); renderJob(); if (activeView==='history') renderHistory();
   } catch (error) {
     $('connection').textContent = '本机连接已断开';
-    $('error-banner').textContent = '无法连接本机服务：'+error.message+'。请保持启动终端打开，或重新双击启动。';
+    $('error-banner').textContent = '无法连接本机服务：'+error.message+(state.desktop?'。请重新打开交邮应用。':'。请保持启动终端打开，或重新双击启动。');
     $('error-banner').hidden = false;
     for (const id of ['send-selected','test-send','choose-files']) $(id).disabled = true;
   }

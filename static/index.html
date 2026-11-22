@@ -14,7 +14,7 @@
     <button class="nav active" id="nav-drafts"><span>▤</span> 邮件草稿 <b id="nav-count">0</b></button>
     <button class="nav" id="nav-history"><span>◷</span> 发送记录</button>
     <div class="side-note"><span class="local-dot"></span> 仅在这台 Mac 运行<p>草稿和记录保存在本机。<br>密码仅用于当前发送任务。</p></div>
-    <div class="side-bottom">SJTU MAIL DESK <span>v1.0</span></div>
+    <div class="side-bottom">SJTU MAIL DESK <span>v1.1</span></div>
   </aside>
   <main>
     <header class="topbar"><span id="breadcrumb">工作区 / 邮件草稿</span><div><span class="connection" id="connection">正在连接本机服务</span><span class="mode-pill" id="mode-pill">本机模式</span></div></header>
@@ -67,7 +67,7 @@
         <div class="table-scroll"><table class="history-table"><thead><tr><th>邮件 / 时间</th><th>模式 / 实际投递地址</th><th>结果</th><th>说明</th></tr></thead><tbody id="history-rows"></tbody></table></div>
         <div id="history-empty" class="empty"><h3>还没有发送记录</h3><p>完成测试或正式提交后，记录会显示在这里。</p></div>
       </section>
-      <footer>交邮 · 文件保存在本机，发送前由你确认。<span>关闭启动终端将停止本机服务</span></footer>
+      <footer>交邮 · 文件保存在本机，发送前由你确认。<span id="runtime-hint">关闭启动终端将停止本机服务</span></footer>
     </div>
   </main>
   <dialog id="detail-dialog" class="detail-dialog"><div class="dialog-heading"><div><span class="eyebrow">邮件详情</span><h2 id="detail-subject"></h2><p id="detail-filename"></p></div><button class="icon-button close-dialog" aria-label="关闭详情">×</button></div><div class="dialog-body"><div id="detail-problem" class="notice error" hidden></div><div id="detail-recipients" class="recipient-grid"></div><h3>附件 <span id="attachment-count"></span></h3><div id="detail-attachments" class="attachments"></div><div class="body-tabs"><button id="plain-tab" class="tab active">纯文本</button><button id="html-tab" class="tab">HTML 预览</button><small>预览禁用脚本、外部图片和链接</small></div><pre id="plain-body"></pre><iframe id="html-body" title="隔离的邮件正文预览" sandbox="" referrerpolicy="no-referrer" hidden></iframe><div id="detail-deliveries"></div><div id="unlock-box" class="unlock-box" hidden><h3>人工核对后再重试</h3><p id="unlock-scope"></p><p>SMTP 提交不一定出现在网页邮箱“已发送”中。请结合服务器记录或收件方确认后操作。解除锁定可能造成重复投递。</p><label class="field">完整输入“已核对，允许重试”<input id="unlock-confirm" autocomplete="off"></label><button id="unlock-button" class="button danger">解除待核对地址的锁定</button></div></div></dialog>

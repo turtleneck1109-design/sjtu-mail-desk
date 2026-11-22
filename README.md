@@ -4,7 +4,17 @@
 
 运行时仅使用 Python 标准库，不需要安装第三方 Python 包。HTML、CSS 和 JavaScript 也不依赖外部服务。
 
-## 快速开始
+## 免 Python 的 Mac 应用（v1.1 试用版）
+
+[下载 DMG 安装包](https://github.com/turtleneck1109-design/sjtu-mail-desk/releases/download/v1.1/SJTU-Mail-v1.1-universal2.dmg) · [下载 ZIP](https://github.com/turtleneck1109-design/sjtu-mail-desk/releases/download/v1.1/SJTU-Mail-v1.1-universal2.zip) · [版本说明](https://github.com/turtleneck1109-design/sjtu-mail-desk/releases/tag/v1.1)
+
+支持 **macOS 13 或以上，Apple 芯片与 Intel 通用**。打开 DMG，把 `交邮.app` 拖到“应用程序”，双击启动后选择“打开邮件工作台”或“体验演示模式”。应用内置运行环境，用户无需安装 Python 或其他依赖，也无需打开终端；邮件界面仍在默认浏览器中使用。
+
+**此版未做 Developer ID 签名和 Apple 公证**，从网络下载后可能被 macOS 阻止首次打开，暂不保证零提示启动。它使用本地完整性签名，不会关闭系统安全保护。现有 v1.0 源码版下载保持不变。
+
+应用数据位于 `~/Library/Application Support/SJTUMailDesk/`，与 `.app` 分离保存。旧版用户应先按 [Mac 应用使用说明](macos/Mac应用使用说明.txt) 迁移整个 `data` 文件夹，再继续正式发送，以保留防重复发送记录。验证范围见 [应用打包验证报告](macos/打包验证报告.txt)。
+
+## 源码版快速开始
 
 环境要求：macOS、Python 3.9 或以上版本。本项目已在 Python 3.14.4 环境测试。
 
@@ -83,7 +93,7 @@ python3 -m unittest discover -s tests -v
 node --test tests/test_ui.js
 ```
 
-共 46 项自动化测试通过：33 项邮件与本机接口测试、3 项 Mac 启动入口测试、10 项离线界面逻辑测试。所有提交测试使用模拟 SMTP 对象，没有发送真实邮件。
+共 50 项自动化测试通过：33 项邮件与本机接口测试、3 项 Mac 启动入口测试、4 项打包适配测试、10 项离线界面逻辑测试。所有提交测试使用模拟 SMTP 对象，没有发送真实邮件。
 
 Node.js 只用于开发者运行界面逻辑测试，普通使用不需要。界面逻辑测试不是浏览器渲染测试；开发时浏览器预览受访问权限限制，未完成自动化视觉验收。用户已在本机启动试用成功。
 
@@ -94,3 +104,19 @@ Node.js 只用于开发者运行界面逻辑测试，普通使用不需要。界
 暂不包含 Excel 单元格编辑、正文编辑、定时发送、投递撤回、送达跟踪或多账号管理。
 
 详细步骤见 [使用说明](使用说明.txt)，测试范围见 [测试报告](测试报告.txt)。
+
+
+## 构建 Mac 应用
+
+开发者需要 macOS、Xcode Command Line Tools，以及 python.org 的 universal2 Python 3.14 运行环境。用户下载应用时不需要这些工具。
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install -r macos/requirements-build.txt
+.venv/bin/python macos/build.py --work-dir work/mac-build --output-dir dist
+python3 macos/verify_bundle.py dist/交邮.app
+```
+
+构建工具生成 `.app`、DMG、ZIP 和 SHA-256 校验文件，只纳入界面、源码和运行环境，不打包用户邮件、数据库或构建机密码。自检只使用临时演示数据，不发送真实邮件；Intel 自检在 Apple 芯片机器上需要已有 Rosetta。
+
+原生启动窗口负责打开工作区和退出；有提交进行时，会先提示停止后续任务并等待当前提交结束。应用退出后，浏览器中旧的工作台页面会失去连接。
